@@ -85,6 +85,7 @@ void setup()
   #if DEBUG
     Serial.begin(9600);
   #endif
+  DBG_PRINTLN(F("Running..."));
 }
 
 /*
