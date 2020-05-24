@@ -36,25 +36,6 @@
 #define I2C_ADDRESS   ( 0x02 )
 
 /*
- * Supported I2C Commands
- */
-typedef uint8_t i2c_command_t; enum
-  { 
-    I2C_COMMAND_POWER         = 0,
-    I2C_COMMAND_CHANNEL_UP    = 1,
-    I2C_COMMAND_CHANNEL_DOWN  = 2,
-    I2C_COMMAND_VOLUME_UP     = 3,
-    I2C_COMMAND_VOLUME_DOWN   = 4,
-    
-    /* Add new i2c commands here */
-    
-    I2C_COMMAND_COUNT,
-    I2C_COMMAND_INVALID = I2C_COMMAND_COUNT
-  };
-  
-#define I2C_COMMAND_VALID(cmd)  ((cmd != I2C_COMMAND_INVALID) && (cmd < I2C_COMMAND_COUNT))
-
-/*
  * List of IR Remote Codes
  */
 const PROGMEM char power_toggle_code[] = "0000 006C 0000 0022 00AD 00AD 0016 0041 0016 0041 0016 0041 0016 0016 0016 0016 0016 0016 0016 0016 0016 0016 0016 0041 0016 0041 0016 0041 0016 0016 0016 0016 0016 0016 0016 0016 0016 0016 0016 0016 0016 0041 0016 0016 0016 0016 0016 0016 0016 0016 0016 0016 0016 0016 0016 0041 0016 0016 0016 0041 0016 0041 0016 0041 0016 0041 0016 0041 0016 0041 0016 06FB";
@@ -70,7 +51,7 @@ const PROGMEM char volume_down_code[]  = "0000 006C 0000 0022 00AD 00AD 0016 004
  */
 typedef struct
   {
-    i2c_command_t       i2c_command;
+    uint8_t             i2c_command;
     const char *        ir_code;
     const unsigned int  n_sends;
   } command_map_t;
@@ -78,16 +59,17 @@ typedef struct
 const command_map_t command_map[] = 
   {
     /* I2C Command                IR Code             Number of times to send IR code */
-    { I2C_COMMAND_POWER         , power_toggle_code,  1                               },
-    { I2C_COMMAND_CHANNEL_UP    , channel_up_code,    1                               },
-    { I2C_COMMAND_CHANNEL_DOWN  , channel_down_code,  1                               },
-    { I2C_COMMAND_VOLUME_UP     , volume_up_code,     3                               },
-    { I2C_COMMAND_VOLUME_DOWN   , volume_down_code,   3                               }
+    { 0x00                      , power_toggle_code,  1                               },
+    { 0x01                      , channel_up_code,    1                               },
+    { 0x02                      , channel_down_code,  1                               },
+    { 0x03                      , volume_up_code,     3                               },
+    { 0x04                      , volume_down_code,   3                               }
 
     /* Add new i2c -> ir command mappings here */
   };
   
-i2c_command_t   recieved_command;
+uint8_t   command;
+bool      recieved_command;             
 
 /*
  * Function: setup()
@@ -95,7 +77,7 @@ i2c_command_t   recieved_command;
  */
 void setup() 
 {
-  recieved_command = I2C_COMMAND_INVALID;
+  recieved_command = false;
   
   Wire.begin(I2C_ADDRESS);
   Wire.onReceive(receiveEvent);
@@ -111,14 +93,14 @@ void setup()
  */
 void loop() 
 {
-  if (I2C_COMMAND_VALID(recieved_command))
+  if (recieved_command)
   {
     for (int i = 0; i < cnt_of_array(command_map); i++)
     {
-      if (command_map[i].i2c_command == recieved_command)
+      if (command_map[i].i2c_command == command)
       { 
         DBG_PRINT(F("Command received: "));
-        DBG_PRINTLN(recieved_command);
+        DBG_PRINTLN(command);
 
         const IrSignal * irSignal = Pronto::parse_PF(command_map[i].ir_code);
         #if DEBUG
@@ -134,7 +116,7 @@ void loop()
         break; 
       }
     }
-    recieved_command = I2C_COMMAND_INVALID;
+    recieved_command = false;
   }
 }
 
@@ -150,9 +132,10 @@ void receiveEvent(int bytesReceived)
   
   while (bytesReceived--)
   {
-    if (!I2C_COMMAND_VALID(recieved_command))
+    if (!recieved_command)
     {
-      recieved_command = Wire.read();
+      command = Wire.read();
+      recieved_command = true;
     }
     else
     {
