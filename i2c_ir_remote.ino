@@ -68,8 +68,9 @@ const command_map_t command_map[] =
     /* Add new i2c -> ir command mappings here */
   };
   
-uint8_t   command;
-bool      recieved_command;             
+uint8_t     command;
+bool        recieved_command;  
+IrSender *  irSender = IrSenderPwm::getInstance(true, PIN);           
 
 /*
  * Function: setup()
@@ -108,12 +109,14 @@ void loop()
           irSignal->dump(Serial, true);
         #endif
 
-        IrSender * irSender = IrSenderPwm::getInstance(true, PIN);
         for (int n = 0; n < command_map[i].n_sends; n++)
         {
           irSender->sendIrSignal(*irSignal, 1);
           delay(100);
         }
+
+        delete irSignal;
+        
         break; 
       }
     }
