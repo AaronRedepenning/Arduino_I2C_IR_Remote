@@ -12,15 +12,9 @@
 #define cnt_of_array(x) (sizeof(x) / sizeof(0[x]))
 
 /*
- * Pin to use for PWM
- * IrSenderPwm only supports pin 6 on Arduino Nano Every
- */
-#define PIN ( 6 )
-
-/*
  * Debug macros
  */
-#define DEBUG ( 0 )
+#define DEBUG ( 1 )
 
 #if DEBUG
   #define DBG_PRINT(...)    Serial.print(__VA_ARGS__)
@@ -70,7 +64,7 @@ const command_map_t command_map[] =
   
 uint8_t     command;
 bool        recieved_command;  
-IrSender *  irSender = IrSenderPwm::getInstance(true, PIN);           
+IrSender *  irSender = IrSenderPwm::getInstance(true);           
 
 /*
  * Function: setup()
