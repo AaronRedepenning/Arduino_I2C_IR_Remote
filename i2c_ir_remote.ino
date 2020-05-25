@@ -14,7 +14,7 @@
 /*
  * Debug macros
  */
-#define DEBUG ( 1 )
+#define DEBUG ( 0 )
 
 #if DEBUG
   #define DBG_PRINT(...)    Serial.print(__VA_ARGS__)
