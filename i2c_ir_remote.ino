@@ -95,6 +95,8 @@ IrSender *  irSender = IrSenderPwm::getInstance(true);
  */
 void setup()
 {
+  wdt_disable();
+
   recieved_command = false;
 
   Wire.begin(I2C_ADDRESS);
@@ -180,6 +182,6 @@ void receiveEvent(int bytesReceived)
  */
 void softwareReset()
 {
-  wdt_enable(WDTO_15MS);
+  wdt_enable(WDTO_60MS);
   while(1) { /* wait for watchdog to timeout */ };
 }
