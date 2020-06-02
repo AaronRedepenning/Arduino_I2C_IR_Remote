@@ -59,7 +59,7 @@ const char * channel_50_sequence[]     = { channel_0_code, channel_5_code };
 
 /* Adds a single IR command */
 #define ADD_IR_CODE(_i2c_command, _ir_code) \
-          { _i2c_command, (char*[]){_ir_code}, 1 }
+          { _i2c_command, (const char*[]){_ir_code}, 1 }
 
 /* Adds a IR command sequence */
 #define ADD_IR_SEQUENCE(_i2c_command, _ir_sequence) \
@@ -86,7 +86,7 @@ const command_map_t command_map[] =
   };
 
 uint8_t     command;
-bool        recieved_command;
+bool        received_command;
 IrSender *  irSender = IrSenderPwm::getInstance(true);
 
 /*
@@ -97,7 +97,7 @@ void setup()
 {
   wdt_disable();
 
-  recieved_command = false;
+  received_command = false;
 
   Wire.begin(I2C_ADDRESS);
   Wire.onReceive(receiveEvent);
@@ -105,7 +105,7 @@ void setup()
   #if DEBUG
     Serial.begin(9600);
   #endif
-  DBG_PRINTLN(F("Running...\n"));
+  DBG_PRINTLN(F("Running..."));
 }
 
 /*
@@ -114,18 +114,24 @@ void setup()
  */
 void loop()
 {
-  if (recieved_command)
+  if (received_command)
   {
+    DBG_PRINT(F("\nReceived command: 0x"));
+    DBG_PRINTLN(command, HEX);
+
     for (int i = 0; i < cnt_of_array(command_map); i++)
     {
       if (command_map[i].i2c_command == command)
       {
-        DBG_PRINT(F("Command received: "));
-        DBG_PRINTLN(command);
+        DBG_PRINTLN(F("Sending IR Codes\n"));
 
         for (int n = 0; n < command_map[i].ir_code_list_length; n++)
         {
           const IrSignal * irSignal = Pronto::parse_PF(command_map[i].ir_code_list[n]);
+
+          DBG_PRINT(F("Code #"));
+          DBG_PRINT(n);
+          DBG_PRINTLN(F(":"));
 
           #if DEBUG
             irSignal->dump(Serial, true);
@@ -146,7 +152,7 @@ void loop()
         break;
       }
     }
-    recieved_command = false;
+    received_command = false;
   }
 }
 
@@ -156,16 +162,12 @@ void loop()
  */
 void receiveEvent(int bytesReceived)
 {
-  DBG_PRINT(F("receiveEvent( "));
-  DBG_PRINT(bytesReceived);
-  DBG_PRINTLN(F(" )"));
-
   while (bytesReceived--)
   {
-    if (!recieved_command)
+    if (!received_command)
     {
       command = Wire.read();
-      recieved_command = true;
+      received_command = true;
     }
     else
     {
@@ -182,6 +184,6 @@ void receiveEvent(int bytesReceived)
  */
 void softwareReset()
 {
-  wdt_enable(WDTO_60MS);
-  while(1) { /* wait for watchdog to timeout */ };
+  wdt_enable(WDTO_120MS);
+  while(1) { /* wait for watchdog to timeout and reset arduino */ };
 }
