@@ -85,9 +85,9 @@ const command_map_t command_map[] =
     /* Add new i2c -> IR code/sequence mappings here */
   };
 
-uint8_t     command;
-bool        received_command;
-IrSender *  irSender = IrSenderPwm::getInstance(true);
+volatile uint8_t  command;
+volatile bool     received_command;
+IrSender *        irSender = IrSenderPwm::getInstance(true);
 
 /*
  * Function: setup()
