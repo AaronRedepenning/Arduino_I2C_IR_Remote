@@ -16,7 +16,8 @@
 /*
  * Debug macros
  */
-#define DEBUG ( 0 )
+#define DEBUG     ( 0 )
+#define DEBUG_HUE ( 0 )
 
 #if DEBUG
   #define DBG_PRINT(...)    Serial.print(__VA_ARGS__)
@@ -171,7 +172,17 @@ void receiveEvent(int bytesReceived)
     }
     else
     {
-      (void)Wire.read();
+      #if DEBUG_HUE
+      if (command == 255)
+      {
+        DBG_PRINT(F("Color Code: "));
+        DBG_PRINTLN(Wire.read(), HEX);
+      }
+      else
+      #endif
+      {
+        (void)Wire.read();
+      }
     }
   }
 }
